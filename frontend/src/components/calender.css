@@ -1,0 +1,7 @@
+.color-empty {
+    fill: #ebedf0;
+  }
+  .color-completed {
+    fill: #18a4b4; /* Green color for completed tasks */
+  }
+  
