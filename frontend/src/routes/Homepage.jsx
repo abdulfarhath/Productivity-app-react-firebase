@@ -2,10 +2,12 @@ import { format } from 'date-fns';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "../firebase/firebaseconfig";
 
 // import './home.css'; // Import the specific CSS for the homepage
 import Calender from '../components/Calender';
 import Quote from '../components/Qoute';
+import { signOut } from 'firebase/auth';
 
 export default function Homepage() {
   const [tasks, setTasks] = useState([]);
@@ -92,11 +94,16 @@ export default function Homepage() {
     });
   }
 
+  async function handleLogout(){
+    await signOut(auth); 
+  }
+
 
   return (
     <div className="homepage flex flex-col justify-center items-center w-full min-h-screen bg-gray-800 text-gray-100 p-4">
       <div className="quote mb-8">
         <Quote />
+        <button onClick={handleLogout} >logout btn</button>
       </div>
 
       <div className="greenery bg-blue-gray-700 w-full max-w-4xl h-40 mb-8 rounded-lg shadow-lg">

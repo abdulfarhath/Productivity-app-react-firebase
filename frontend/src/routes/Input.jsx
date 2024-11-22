@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ref, onValue } from "firebase/database";
-import database from "../firebase/firebaseconfig.js";
+// import db from "../firebase/firebaseconfig.js";
 // import { addTask, deleteTask, fetchTasks } from "./firebaseFunctions";
 
 export default function Input() {
@@ -16,18 +16,18 @@ export default function Input() {
 
   useEffect(() => {
     setTasks(taskArr);
-    fetchTasks(setTasks);
+    // fetchTasks(setTasks);
   }, []);
 
 
-  function fetchTasks(setTasks) {
-    const tasksRef = ref(database, "tasks/");
-    onValue(tasksRef, (snapshot) => {
-      const data = snapshot.val();
-      const tasksArray = data ? Object.keys(data).map((key) => ({ id: key, ...data[key] })) : [];
-      setTasks(tasksArray);
-    });
-  }
+  // function fetchTasks(setTasks) {
+  //   const tasksRef = ref(db, "tasks/");
+  //   onValue(tasksRef, (snapshot) => {
+  //     const data = snapshot.val();
+  //     const tasksArray = data ? Object.keys(data).map((key) => ({ id: key, ...data[key] })) : [];
+  //     setTasks(tasksArray);
+  //   });
+  // }
 
   // function addTask(task, type) {
   //   const tasksRef = ref(database, "tasks/");

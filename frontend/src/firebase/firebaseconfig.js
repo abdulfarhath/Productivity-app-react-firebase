@@ -1,5 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
+// import { get, getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBzZMKaXesr3Ft4-Qy_g5MmTpvLgVLmpTA",
@@ -12,9 +14,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-
-export default database;
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+export const db = getFirestore(app);
 
 // import firebase from 'firebase/app';
 // import 'firebase/firestore'; // If you're using Firestore to store heatmap data
