@@ -2,7 +2,8 @@ import { format } from 'date-fns';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from "uuid";
-import { auth } from "../firebase/firebaseconfig";
+import { auth, db } from "../firebase/firebaseconfig";
+import { getDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
 
 // import './home.css'; // Import the specific CSS for the homepage
 import Calender from '../components/Calender';
@@ -13,40 +14,42 @@ export default function Homepage() {
   const [tasks, setTasks] = useState([]);
   const [isAllDone, setAllDone] = useState(false);
   const [heatmapValues, setHeatmapValues] = useState([]);
- 
+
   const navigate = useNavigate();
 
   const today = new Date();
-
-  const taskArr = [
-    {
-      id: uuidv4(),
-      type: "mental",
-      task: "read a book",
-      isDone: false,
-    },
-    {
-      id: uuidv4(),
-      type: "physical",
-      task: "go for a run",
-      isDone: false,
-    },
-    {
-      id: uuidv4(),
-      type: "spiritual",
-      task: "pray",
-      isDone: false,
-    },
-  ];
+  const user = auth.currentUser;
+  // const userId = user.uid;
+  const userId = "user2";
+  const tasksRef = collection(db, "users", userId, "tasks");
 
   useEffect(() => {
-    setTasks(taskArr);
-    setHeatmapValues(generateInitialHeatmapValues());
+    // setTasks(taskArr);
+    fetchTasks();
+    // setHeatmapValues(generateInitialHeatmapValues());
+    // setHeatmapValues(fetchHeatmapValues());
+    fetchHeatmapValues();
   }, []);
+
+  const fetchTasks = async () => {
+    if (user) {
+      const querySnapshot = await getDocs(tasksRef);
+
+      const taskArr = [];
+      querySnapshot.forEach((doc) => {
+        taskArr.push({ id: doc.id, ...doc.data() });
+      });
+
+      console.log(taskArr);
+      setTasks(taskArr);
+    } else {
+      console.log("user not logged in");
+    }
+  }
 
   useEffect(() => {
     const allDone = tasks.every((tsk) => tsk.isDone);
-    setAllDone(allDone);
+    setAllDone((tasks.length != 0) ? allDone : false);
   }, [tasks]);
 
   useEffect(() => {
@@ -62,40 +65,81 @@ export default function Homepage() {
       });
     } else {
       setHeatmapValues((prevValues) => {
-      return prevValues.map((value) => {
-        // Reset today's date count to 0 when not all tasks are done
-        if (value.date === format(today, 'yyyy-MM-dd')) {
-        return { ...value, count: 0 };
-        }
-        return value;
-      });
+        return prevValues.map((value) => {
+          // Reset today's date count to 0 when not all tasks are done
+          if (value.date === format(today, 'yyyy-MM-dd')) {
+            return { ...value, count: 0 };
+          }
+          return value;
+        });
       });
     }
   }, [isAllDone]);
- 
-  function generateInitialHeatmapValues() {
-    const values = [];
-    for (let i = 0; i < 365; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() - i);
-      values.push({
-        date: format(date, 'yyyy-MM-dd'),
-        count: 0, // Initialize all dates with 0
+
+  // function generateInitialHeatmapValues() {
+  //   const values = [];
+  //   for (let i = 0; i < 365; i++) {
+  //     const date = new Date();
+  //     date.setDate(today.getDate() - i);
+  //     values.push({
+  //       date: format(date, 'yyyy-MM-dd'),
+  //       count: 0, // Initialize all dates with 0
+  //     });
+  //   }
+  //   return values;
+  // }
+
+  const fetchHeatmapValues = async () => {
+    if (user) {
+      const heatmapRef = collection(db, "users", userId, "heatmap");
+      const querySnapshot = await getDocs(heatmapRef);
+
+      const heatmapArr = [];
+      querySnapshot.forEach((doc) => {
+        heatmapArr.push({ id: doc.id, ...doc.data() });
       });
+      // console.log(heatmapArr);
+      setHeatmapValues(heatmapArr);
+    } else {
+      console.log("user not logged in");
     }
-    return values;
-  }
+  };
 
-  function handleCheckbox(id) {
+  // useEffect(() => {
+  //   fetchHeatmapValues();
+  // }, []);
+
+  async function handleCheckbox(taskId, parentId) {
     setTasks((tasks) => {
-      return tasks.map((tsk) => (
-        tsk.id === id ? { ...tsk, isDone: !tsk.isDone } : tsk
-      ));
+      return tasks.map(async (tsk) => {
+        if (tsk.id === parentId) {
+          return {
+            ...tsk,
+            tasks: tsk.tasks.map((innerTask) =>
+              innerTask.id === taskId ? { ...innerTask, completed: !innerTask.completed } : innerTask
+            ),
+          };
+        }
+        return tsk;
+      });
     });
+
+    if (user) {
+      const taskDocRef = doc(tasksRef, parentId);
+      const taskDoc = await getDoc(taskDocRef);
+      if (taskDoc.exists()) {
+      const taskData = taskDoc.data();
+      const updatedTasks = taskData.tasks.map((innerTask) =>
+        innerTask.id === taskId ? { ...innerTask, completed: !innerTask.completed } : innerTask
+      );
+      await setDoc(taskDocRef, { ...taskData, tasks: updatedTasks });
+      fetchTasks(); // Re-fetch tasks to trigger re-render
+      }
+    }
   }
 
-  async function handleLogout(){
-    await signOut(auth); 
+  async function handleLogout() {
+    await signOut(auth);
   }
 
 
@@ -115,56 +159,57 @@ export default function Homepage() {
           <h2 className="text-2xl font-semibold mb-4">Mental win</h2>
           <div className="mental mb-6">
             {tasks.map((tsk) => {
-              if (tsk.type === "mental") {
-                return (
-                  <div key={tsk.id} className="task flex items-center gap-2 mb-2">
+              if (tsk.id === "mental") {
+                return tsk.tasks.map((innerTask) => (
+                  <div key={innerTask.id} className="task flex items-center gap-2 mb-2">
                     <input
-                      onChange={() => handleCheckbox(tsk.id)}
-                      checked={tsk.isDone}
+                      onChange={() => handleCheckbox(innerTask.id, "mental")}
+                      checked={innerTask.completed}
                       type="checkbox"
                       className="accent-green-500"
                     />
-                    <h2 className="text-lg">{tsk.task}</h2>
+                    <h2 className="text-lg">{innerTask.name}</h2>
                   </div>
-                );
+                ));
               }
             })}
+
           </div>
 
           <h2 className="text-2xl font-semibold mb-4">Physical win</h2>
           <div className="physical mb-6">
             {tasks.map((tsk) => {
-              if (tsk.type === "physical") {
-                return (
-                  <div key={tsk.id} className="task flex items-center gap-2 mb-2">
+              if (tsk.id === "physical") {
+                return tsk.tasks.map((innerTask) => (
+                  <div key={innerTask.id} className="task flex items-center gap-2 mb-2">
                     <input
-                      onChange={() => handleCheckbox(tsk.id)}
-                      checked={tsk.isDone}
+                      onChange={() => handleCheckbox(innerTask.id,"physical")}
+                      checked={innerTask.completed}
                       type="checkbox"
                       className="accent-green-500"
                     />
-                    <h2 className="text-lg">{tsk.task}</h2>
+                    <h2 className="text-lg">{innerTask.name}</h2>
                   </div>
-                );
+                ));
               }
             })}
           </div>
 
           <h2 className="text-2xl font-semibold mb-4">Spiritual win</h2>
           <div className="spiritual">
-            {tasks.map((tsk) => {
-              if (tsk.type === "spiritual") {
-                return (
-                  <div key={tsk.id} className="task flex items-center gap-2 mb-2">
+          {tasks.map((tsk) => {
+              if (tsk.id === "spiritual") {
+                return tsk.tasks.map((innerTask) => (
+                  <div key={innerTask.id} className="task flex items-center gap-2 mb-2">
                     <input
-                      onChange={() => handleCheckbox(tsk.id)}
-                      checked={tsk.isDone}
+                      onChange={() => handleCheckbox(innerTask.id, "spiritual")}
+                      checked={innerTask.completed}
                       type="checkbox"
                       className="accent-green-500"
                     />
-                    <h2 className="text-lg">{tsk.task}</h2>
+                    <h2 className="text-lg">{innerTask.name}</h2>
                   </div>
-                );
+                ));
               }
             })}
           </div>
@@ -176,7 +221,7 @@ export default function Homepage() {
           Add / Edit Tasks
         </button>
       </div>
-      
+
     </div>
   );
 }

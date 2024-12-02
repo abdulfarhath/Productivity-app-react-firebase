@@ -67,5 +67,7 @@ const format = (date, formatStr) => {
 };
 
 // Example usage (replace 'userId' with an actual userId from your Firestore)
-const userId = "user1"; // Replace with the actual user ID
+const userId = "user2"; // Replace with the actual user ID
 fillRandomData(userId);
+
+

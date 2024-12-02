@@ -8,14 +8,9 @@ export default function Input() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
 
-  const taskArr = [
-    { id: uuidv4(), type: "mental", task: "Read a book", isDone: false },
-    { id: uuidv4(), type: "physical", task: "Go for a run", isDone: false },
-    { id: uuidv4(), type: "spiritual", task: "Pray", isDone: false },
-  ];
 
   useEffect(() => {
-    setTasks(taskArr);
+    // setTasks(taskArr);
     // fetchTasks(setTasks);
   }, []);
 
