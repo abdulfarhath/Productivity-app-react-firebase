@@ -9,6 +9,7 @@ const quotes = [
   "The only way to do great work is to love what you do. – Steve Jobs",
 ];
 
+
 export default function Quote() {
   // Get today's date
   const today = new Date();
@@ -23,8 +24,7 @@ export default function Quote() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold p-6">Quote of the Day</h1>
-      <p className="text-lg p-4 italic">{quoteOfTheDay}</p>
+      <p className="text-xl font-bold p-6">{quoteOfTheDay}</p>
     </>
   );
 }
