@@ -3,11 +3,13 @@ import { v4 as uuidv4 } from "uuid";
 import { ref, onValue } from "firebase/database";
 // import db from "../firebase/firebaseconfig.js";
 // import { addTask, deleteTask, fetchTasks } from "./firebaseFunctions";
+import { useNavigate } from 'react-router-dom';
 
 export default function Input() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
 
+  const navigate = useNavigate();
 
   useEffect(() => {
     // setTasks(taskArr);
@@ -50,6 +52,7 @@ export default function Input() {
   //   const taskRef = ref(database, `tasks/${taskId}`);
   //   remove(taskRef);
   // }
+  
 
   function deleteTask(id) {
     setTasks(tasks.filter((task) => task.id !== id));
@@ -180,6 +183,12 @@ export default function Input() {
               ))}
           </ul>
         </div>
+      </div>
+      <div className="btn flex flex-row justify-center mt-12 gap-9 ">
+        <button className=" bg-blue-500 rounded w-20 h-10 hover:bg-blue-700 text-white font-bold  " >SAVE</button>
+        <button className=" bg-blue-500 rounded w-20 h-10 hover:bg-blue-700 text-white font-bold  "
+          onClick={()=>navigate('/')}
+        >GO BACK</button>
       </div>
     </div>
   );

@@ -147,7 +147,7 @@ export default function Homepage() {
     <div className="homepage flex flex-col justify-center items-center w-full min-h-screen bg-gray-800 text-gray-100 p-4">
       <div className="quote mb-8">
         <Quote />
-        <button onClick={handleLogout} >logout btn</button>
+        <button className=" bg-blue-500 rounded w-24 h-8 hover:bg-blue-700 text-white font-bold  " onClick={handleLogout} >logout</button>
       </div>
 
       <div className="greenery bg-blue-gray-700 w-full max-w-4xl h-40 mb-8 rounded-lg shadow-lg">
